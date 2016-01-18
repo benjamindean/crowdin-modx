@@ -1,6 +1,6 @@
 ### Crowdin translations parser for MODX
 
-Command-line utility which downloads translations from Crowdin Localization Platform and converts them into MODX lexicon files.
+Command-line utility which downloads translations from [Crowdin](https://crowdin.com/) Localization Platform and converts them into MODX lexicon files.
 
 ## Getting Started
 
