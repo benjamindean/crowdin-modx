@@ -90,14 +90,15 @@ def cleanup():
         shutil.rmtree(SOURCE_DIR)
 
 @cli.command()
-def run(base=BASE_PATH):
+@click.pass_context
+def run(ctx, base=BASE_PATH):
     """Download and convert all projects"""
     global BASE_PATH
     BASE_PATH = base
     for namespace in KEYS.iterkeys():
-        download(namespace)
-        convert(namespace)
-        cleanup()
+        ctx.invoke(download, namespace=namespace)
+        ctx.invoke(convert, namespace=namespace)
+        ctx.invoke(cleanup)
     print COLORS['SUCCESS'] + COLORS['BOLD'] + "All done!"
 
 if __name__ == '__main__':
