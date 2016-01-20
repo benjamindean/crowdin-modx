@@ -9,24 +9,19 @@ import click
 
 BASE_PATH = '.'
 KEYS = ""
-COLORS = {
-    'SUCCESS': '\033[92m',
-    'WARNING': '\033[93m',
-    'FAIL': '\033[91m',
-    'BOLD': '\033[1m'
-}
 
 @click.group()
 def cli():
     """Crowdin parser for MODX"""
     pass
 
-try:
-   with open('projects.json') as keysFile:
-    KEYS = json.load(keysFile)
-except IOError:
-   print COLORS['FAIL'] + "projects.json file not found"
-   exit()
+def _setKeys():
+    try:
+       with open('projects.json') as keysFile:
+        KEYS = json.load(keysFile)
+    except IOError:
+       click.secho("projects.json file not found.", fg='red')
+       exit()
 
 def mkdir(dir):
     if not os.path.exists(dir):
@@ -36,6 +31,7 @@ def mkdir(dir):
 @click.argument("namespace", nargs=1)
 def download(namespace):
     """Download and extract project"""
+    _setKeys()
     if namespace in KEYS:
         directory = os.path.join(BASE_PATH, 'translations_source', namespace)
         url = "https://api.crowdin.com/api/project/%s/download/all.zip?key=%s" % (namespace, KEYS[namespace])
@@ -43,7 +39,7 @@ def download(namespace):
         subprocess.Popen(['wget', url, '-O', namespace + '.zip'], cwd=directory).wait()
         subprocess.Popen(['unzip', '-o', '-q', namespace + '.zip'], cwd=directory).wait()
     else:
-        print COLORS['FAIL'] + "%s not found in projects.json file." % namespace
+        click.secho("%s not found in projects.json file." % namespace, fg='red')
         exit()
 
 def parse(path, namespace, filename):
@@ -77,9 +73,9 @@ def convert(namespace):
         for (dirpath, dirnames, filenames) in os.walk(path):
             for filename in [f for f in filenames if f.endswith(".csv")]:
                 parse(os.path.join(dirpath, filename), namespace, filename)
-        print COLORS['SUCCESS'] + "%s successfully converted." % namespace
+        click.secho("%s successfully converted." % namespace, fg='green')
     else:
-        print COLORS['FAIL'] + "%s not found in source folder. You need to download in first." % namespace
+        click.secho("%s not found in source folder. You need to download in first." % namespace, fg='red')
         exit()
 
 @cli.command()
@@ -93,13 +89,14 @@ def cleanup():
 @click.pass_context
 def run(ctx, base=BASE_PATH):
     """Download and convert all projects"""
+    _setKeys()
     global BASE_PATH
     BASE_PATH = base
     for namespace in KEYS.iterkeys():
         ctx.invoke(download, namespace=namespace)
         ctx.invoke(convert, namespace=namespace)
         ctx.invoke(cleanup)
-    print COLORS['SUCCESS'] + COLORS['BOLD'] + "All done!"
+    click.secho("All done!", fg='green', bold=True)
 
 if __name__ == '__main__':
     run()
