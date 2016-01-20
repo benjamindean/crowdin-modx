@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import json
+
 import os
 import re
 import csv
+import json
+import click
 import shutil
 import subprocess
-import click
 
 BASE_PATH = '.'
 KEYS = ""
@@ -23,7 +24,7 @@ def _setKeys():
        click.secho("projects.json file not found.", fg='red')
        exit()
 
-def mkdir(dir):
+def _mkdir(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
@@ -35,7 +36,7 @@ def download(namespace):
     if namespace in KEYS:
         directory = os.path.join(BASE_PATH, 'translations_source', namespace)
         url = "https://api.crowdin.com/api/project/%s/download/all.zip?key=%s" % (namespace, KEYS[namespace])
-        mkdir(directory)
+        _mkdir(directory)
         subprocess.Popen(['wget', url, '-O', namespace + '.zip'], cwd=directory).wait()
         subprocess.Popen(['unzip', '-o', '-q', namespace + '.zip'], cwd=directory).wait()
     else:
@@ -49,7 +50,7 @@ def parse(path, namespace, filename):
         directory = os.path.join(BASE_PATH, namespace, 'lexicon', pathList[pathList.index('translations_source') + 2])
         filename = re.sub(r'(\'|&| )', '', filename)
         php = os.path.join(directory, filename.replace('csv', 'inc.php'))
-        mkdir(directory)
+        _mkdir(directory)
 
         file = open(php, 'w')
         file.write('<?php\n')
