@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import csv
-import json
 import os
 import re
 import shutil
@@ -11,15 +10,16 @@ import configparser
 import click
 
 config = configparser.RawConfigParser()
-config.read('config.cfg')
-
-
-BASE_PATH = '.'
-KEYS = ""
+config.read('crowdin.cfg')
 
 try:
-    TEMPLATE = config.get('DEFAULT', 'template')
-    ITEM_TEMPLATE = config.get('DEFAULT', 'item-template')
+    TEMPLATE = config.get('TEMPLATES', 'template')
+    ITEM_TEMPLATE = config.get('TEMPLATES', 'item-template')
+    KEYS = dict(config.items('KEYS'))
+    BASE_PATH = config.get('PATHS', 'base')
+    PATH = config.get('PATHS', 'path')
+    FILENAME = config.get('FILE', 'filename')
+    FILE_EXT = config.get('FILE', 'extension')
 except configparser.NoOptionError as e:
     click.secho(e.message, fg='red')
     exit()
@@ -27,18 +27,8 @@ except configparser.NoOptionError as e:
 
 @click.group()
 def cli():
-    """Crowdin parser for MODX"""
+    """Simple Crowdin parser"""
     pass
-
-
-def _setKeys():
-    global KEYS
-    try:
-        with open('projects.json') as keysFile:
-            KEYS = json.load(keysFile)
-    except IOError:
-        click.secho("projects.json file not found.", fg='red')
-        exit()
 
 
 def _mkdir(dir):
@@ -50,7 +40,6 @@ def _mkdir(dir):
 @click.argument("namespace", nargs=1)
 def download(namespace):
     """Download and extract project"""
-    _setKeys()
     if namespace in KEYS:
         directory = os.path.join(BASE_PATH, 'translations_source', namespace)
         url = "https://api.crowdin.com/api/project/%s/download/all.zip?key=%s" % (namespace, KEYS[namespace])
@@ -63,18 +52,25 @@ def download(namespace):
 
 
 def parse(path, namespace, filename):
-    global TEMPLATE
-    global ITEM_TEMPLATE
-
     with open(path) as csvfile:
         reader = csv.DictReader(csvfile)
         pathList = path.split('/')
-        directory = os.path.join(BASE_PATH, namespace, 'lexicon', pathList[pathList.index('translations_source') + 2])
-        filename = re.sub(r'(\'|&| )', '', filename)
-        php = os.path.join(directory, filename.replace('csv', 'inc.php'))
+        lang = pathList[pathList.index('translations_source') + 2]
+        directory = BASE_PATH + PATH.format(
+            folder=namespace,
+            subfolder='lexicon',
+            lang=lang
+        )
+        if not FILENAME:
+            filename = re.sub(r'(\'|&| )', '', filename)
+            result = os.path.join(directory, filename.replace('csv', FILE_EXT))
+        else:
+            result = os.path.join(directory, FILENAME.format(
+                lang=lang
+            )) + '.' + FILE_EXT
         _mkdir(directory)
 
-        with open(php, 'w') as file:
+        with open(result, 'w') as file:
             str_keys = ''
             for row in reader:
                 key = row['key-id'].replace('"', "")
@@ -85,7 +81,8 @@ def parse(path, namespace, filename):
                 str_keys += ITEM_TEMPLATE.format(
                     key=key,
                     value=translated.replace('"', "'").splitlines()[0],
-                    n='\n'
+                    n='\n',
+                    t='\t'
                 )
 
             file.write(TEMPLATE.format(
@@ -97,7 +94,7 @@ def parse(path, namespace, filename):
 @cli.command()
 @click.argument('namespace', nargs=1)
 def convert(namespace):
-    """Convert project to MODX lexicon files"""
+    """Convert project to language files"""
     path = os.path.join(BASE_PATH, 'translations_source', namespace)
     if os.path.isdir(path):
         for (dirpath, dirnames, filenames) in os.walk(path):
@@ -121,7 +118,6 @@ def cleanup():
 @click.pass_context
 def run(ctx, base=BASE_PATH):
     """Download and convert all projects"""
-    _setKeys()
     global BASE_PATH
     BASE_PATH = base
     for namespace in KEYS:

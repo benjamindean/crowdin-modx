@@ -1,40 +1,39 @@
-### Crowdin translations parser for MODX
+### Crowdin translations parser
 
-Command-line utility which downloads translations from [Crowdin](https://crowdin.com/) Localization Platform and converts them into MODX lexicon files.
+Command-line utility which downloads translations from [Crowdin](https://crowdin.com/) Localization Platform and converts them into usable translation files.
 
 ## Getting Started
 
-1. `git clone git@github.com:benjamindean/crowdin-modx.git`
-2. `cd crowdin-modx && sudo python setup.py install`
-3. Create `projects.json`* file.
-4. Create `config.cfg`** file.
-5. Run `crowdin-modx` inside the folder where `projects.json` file is.
-
-### * projects.json
-
-```
-{
-    "project-identifier": "api-key",
-    ...
-}
-```
+1. `git clone git@github.com:benjamindean/crowdin-parse.git`
+2. `cd crowdin-parse && sudo python setup.py install`
+3. Edit `config.cfg`* file.
+4. Run `crowdin-parse` inside the folder where `projects.json` file is.
 
 ### ** config.cfg
 
 ```
-[DEFAULT]
-template = <?php{n} {array} {n}?>
-item-template = $_lang["{key}"] = "{value}";{n}
-```
+[PATHS]
+; Base path for converted files.
+base = .
+; Full path to the converted files. For example:
+; /{folder}/{lang}/ or /{lang}/
+path = /{folder}/{subfolder}/{lang}/
 
-The script will download and covert all projects mentioned in `projects.json` file into the following folder structure:
+[FILE]
+; if empty - will use original filename exported from Crowdin. Otherwise,
+;{lang} placeholder available.
+filename = {lang}
+; txt, php, etc.
+extension = php
 
-```
-.
-├── project-identifier
-    └── lexicon
-        └── language
-            └── filename.inc.php
+[TEMPLATES]
+; {n} - new line, {t} - tab.
+template = <?php{n}return array({n}{array}); {n}?>
+item-template = {t}"{key}" => "{value}",{n}
+
+[KEYS]
+; project-name = api-key
+test-project-name = projects_api_key
 
 ```
 
@@ -46,7 +45,7 @@ Delete 'translations_source' folder
 
 ### convert [NAMESPACE]
 
-Convert project to MODX lexicon files
+Convert project to language files
 
 ### download [NAMESPACE]
 
