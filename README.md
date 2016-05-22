@@ -5,7 +5,7 @@ Command-line utility which downloads translations from [Crowdin](https://crowdin
 ## Getting Started
 
 1. `git clone git@github.com:benjamindean/crowdin-parse.git`
-2. `cd crowdin-parse && sudo python setup.py install`
+2. `cd crowdin-parse && sudo python3 setup.py install`
 3. Edit `config.cfg`* file.
 4. Run `crowdin-parse` inside the folder where `projects.json` file is.
 

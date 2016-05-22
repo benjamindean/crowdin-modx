@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 import csv
 import os
@@ -63,11 +63,13 @@ def parse(path, namespace, filename):
         pathList = path.split('/')
         lang = pathList[pathList.index('translations_source') + 2]
         directory = BASE_PATH + PATH.format(lang=lang)
+
         if not FILENAME:
             filename = re.sub(r'(\'|&| )', '', filename)
             result = os.path.join(directory, filename.replace('csv', FILE_EXT))
         else:
             result = os.path.join(directory, FILENAME.format(lang=lang)) + '.' + FILE_EXT
+
         _mkdir(directory)
 
         with open(result, 'w') as file:
