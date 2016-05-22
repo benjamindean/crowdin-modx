@@ -16,10 +16,11 @@ try:
     TEMPLATE = config.get('TEMPLATES', 'template')
     ITEM_TEMPLATE = config.get('TEMPLATES', 'item-template')
     KEYS = dict(config.items('KEYS'))
-    BASE_PATH = config.get('PATHS', 'base')
+    BASE_PATH = config.get('PATHS', 'base-path')
     PATH = config.get('PATHS', 'path')
     FILENAME = config.get('FILE', 'filename')
     FILE_EXT = config.get('FILE', 'extension')
+    ONLY_FILES = config.get('FILE', 'only_files')
 except configparser.NoOptionError as e:
     click.secho(e.message, fg='red')
     exit()
@@ -46,6 +47,7 @@ def download(namespace):
         _mkdir(directory)
         subprocess.Popen(['wget', url, '-O', namespace + '.zip'], cwd=directory).wait()
         subprocess.Popen(['unzip', '-o', '-q', namespace + '.zip'], cwd=directory).wait()
+
     else:
         click.secho("%s not found in projects.json file." % namespace, fg='red')
         exit()
@@ -53,31 +55,26 @@ def download(namespace):
 
 def parse(path, namespace, filename):
     with open(path) as csvfile:
+
+        if ONLY_FILES and filename not in ONLY_FILES:
+            return
+
         reader = csv.DictReader(csvfile)
         pathList = path.split('/')
         lang = pathList[pathList.index('translations_source') + 2]
-        directory = BASE_PATH + PATH.format(
-            folder=namespace,
-            subfolder='lexicon',
-            lang=lang
-        )
+        directory = BASE_PATH + PATH.format(lang=lang)
         if not FILENAME:
             filename = re.sub(r'(\'|&| )', '', filename)
             result = os.path.join(directory, filename.replace('csv', FILE_EXT))
         else:
-            result = os.path.join(directory, FILENAME.format(
-                lang=lang
-            )) + '.' + FILE_EXT
+            result = os.path.join(directory, FILENAME.format(lang=lang)) + '.' + FILE_EXT
         _mkdir(directory)
 
         with open(result, 'w') as file:
             str_keys = ''
             for row in reader:
                 key = row['key-id'].replace('"', "")
-                if '' != row['translation']:
-                    translated = row['translation']
-                else:
-                    translated = row['source']
+                translated = row['source'] if not row['translation'] else row['translation']
                 str_keys += ITEM_TEMPLATE.format(
                     key=key,
                     value=translated.replace('"', "'").splitlines()[0],
@@ -116,10 +113,8 @@ def cleanup():
 
 @cli.command()
 @click.pass_context
-def run(ctx, base=BASE_PATH):
+def run(ctx):
     """Download and convert all projects"""
-    global BASE_PATH
-    BASE_PATH = base
     for namespace in KEYS:
         ctx.invoke(download, namespace=namespace)
         ctx.invoke(convert, namespace=namespace)
