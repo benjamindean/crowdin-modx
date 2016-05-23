@@ -47,28 +47,29 @@ def download(namespace):
         _mkdir(directory)
         subprocess.Popen(['wget', url, '-O', namespace + '.zip'], cwd=directory).wait()
         subprocess.Popen(['unzip', '-o', '-q', namespace + '.zip'], cwd=directory).wait()
-
     else:
         click.secho("%s not found in projects.json file." % namespace, fg='red')
         exit()
 
 
 def parse(path, namespace, filename):
-    with open(path) as csvfile:
+    with open(path) as csv_file:
 
         if ONLY_FILES and filename not in ONLY_FILES:
             return
 
-        reader = csv.DictReader(csvfile)
-        pathList = path.split('/')
-        lang = pathList[pathList.index('translations_source') + 2]
+        reader = csv.DictReader(csv_file)
+        path_list = path.split('/')
+        lang = path_list[path_list.index('translations_source') + 2]
         directory = BASE_PATH + PATH.format(lang=lang)
 
         if not FILENAME:
             filename = re.sub(r'(\'|&| )', '', filename)
             result = os.path.join(directory, filename.replace('csv', FILE_EXT))
         else:
-            result = os.path.join(directory, FILENAME.format(lang=lang)) + '.' + FILE_EXT
+            result = os.path.join(directory, FILENAME.format(
+                lang=lang
+            )) + '.' + FILE_EXT
 
         _mkdir(directory)
 

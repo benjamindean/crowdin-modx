@@ -7,24 +7,28 @@ Command-line utility which downloads translations from [Crowdin](https://crowdin
 1. `git clone git@github.com:benjamindean/crowdin-parse.git`
 2. `cd crowdin-parse && sudo python3 setup.py install`
 3. Edit `config.cfg`* file.
-4. Run `crowdin-parse` inside the folder where `projects.json` file is.
+4. Run `crowdin-parse` inside the folder where `config.cfg` file is.
 
-### ** config.cfg
+### * config.cfg
 
 ```
 [PATHS]
-; Base path for converted files.
-base = .
-; Full path to the converted files. For example:
-; /{folder}/{lang}/ or /{lang}/
-path = /{folder}/{subfolder}/{lang}/
+; `base-path` - Base path for converted files.
+; `path` - Full path to the converted files. For example:
+; /translations/{lang}
+base-path = .
+path = /translations/{lang}/
 
 [FILE]
-; if empty - will use original filename exported from Crowdin. Otherwise,
-;{lang} placeholder available.
-filename = {lang}
-; txt, php, etc.
+; `filename` - if empty - will use original filename exported from Crowdin.
+; Otherwise, {lang} placeholder available.
+; `extension` - txt, php, etc.
+; `only_files` - comma separated list of files to convert.
+; For example: page.csv, second page.csv
+; Leave it blank if you want to convert all files.
+filename =
 extension = php
+only_files =
 
 [TEMPLATES]
 ; {n} - new line, {t} - tab.
@@ -33,7 +37,7 @@ item-template = {t}"{key}" => "{value}",{n}
 
 [KEYS]
 ; project-name = api-key
-test-project-name = projects_api_key
+; test-project-name = projects_api_key
 
 ```
 
@@ -41,19 +45,19 @@ test-project-name = projects_api_key
 
 ### cleanup   
 
-Delete 'translations_source' folder
+Delete 'translations_source' folder.
 
 ### convert [NAMESPACE]
 
-Convert project to language files
+Convert project to language files.
 
 ### download [NAMESPACE]
 
-Download and extract project
+Download and extract project.
 
 ### run
 
-Download and convert all projects
+Download and convert all projects.
 
 ## Notes
 
